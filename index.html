@@ -565,7 +565,29 @@
       let value = event.target.value;
       if (field === "amount" || field === "count") value = Number(value);
       items[index][field] = value;
-      renderAll();
+      updateRow(index);
+      renderBlocks();
+      renderSummary();
+    }
+
+    function updateRow(index) {
+      const row = rowsEl.children[index];
+      if (!row) return;
+
+      const item = items[index];
+      const total = calc20(item);
+      const calcEl = row.querySelector(".calc");
+      const miniBlockEl = row.querySelector(".miniBlock");
+
+      if (calcEl) {
+        calcEl.textContent = yenMan(total);
+      }
+
+      if (miniBlockEl) {
+        miniBlockEl.className = `miniBlock ${typeClass[item.type]}`;
+        miniBlockEl.style.width = `${miniWidth(total)}px`;
+        miniBlockEl.textContent = typeLabels[item.type];
+      }
     }
 
     function getTotals() {
