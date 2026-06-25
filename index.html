@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SimHouse v0.2.2｜住まい積み木</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --panel: #ffffff;
+      --ink: #222222;
+      --muted: #666666;
+      --line: #ded8cd;
+      --expense: #b94a48;
+      --income: #2f6f9f;
+      --net: #6b5b95;
+      --good: #4f7d4b;
+      --warn: #946a1f;
+      --blockText: #ffffff;
+      --shadow: 0 8px 22px rgba(0,0,0,.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "YuGothic", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    header {
+      padding: 22px 18px 10px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(24px, 4vw, 38px);
+      letter-spacing: .02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 18px 40px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      padding: 14px 14px 12px;
+    }
+
+    .metric .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .metric .note {
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .expenseText { color: var(--expense); }
+    .incomeText { color: var(--income); }
+
+    .metric.net.good .value { color: var(--good); }
+    .metric.net.warn .value { color: var(--warn); }
+    .metric.net.bad .value { color: var(--expense); }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .tableWrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      background: #faf9f6;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    input, select {
+      width: 100%;
+      font: inherit;
+      border: 1px solid #cfc8bc;
+      border-radius: 9px;
+      padding: 7px 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input[type="number"] { text-align: right; }
+
+    .amountCell { min-width: 110px; }
+    .nameCell { min-width: 180px; }
+    .typeCell, .timingCell { min-width: 105px; }
+
+    .calc {
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .miniBlock {
+      height: 22px;
+      border-radius: 6px;
+      min-width: 28px;
+      max-width: 130px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #fff;
+      padding: 0 6px;
+    }
+
+    .expense { background: var(--expense); }
+    .income { background: var(--income); }
+    .net { background: var(--net); }
+    .surplus { background: var(--good); }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid #cfc8bc;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover { background: #f0ece4; }
+    .dangerBtn { color: var(--expense); }
+
+    .blocksGrid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .tower {
+      padding: 12px;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .towerHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .towerTitle { font-weight: 800; }
+
+    .towerTotal {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .towerStack {
+      flex: 1;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+      gap: 6px;
+      min-height: 340px;
+      border-radius: 12px;
+      background: #fbfaf7;
+      border: 1px dashed #d6cec0;
+      padding: 10px;
+    }
+
+    .block {
+      border-radius: 10px;
+      color: var(--blockText);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      min-height: 28px;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+
+    .blockName {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .blockAmount {
+      font-weight: 800;
+      white-space: nowrap;
+      opacity: .95;
+    }
+
+    .mission {
+      padding: 14px 16px;
+      border-left: 8px solid var(--line);
+    }
+
+    .mission.good { border-left-color: var(--good); }
+    .mission.warn { border-left-color: var(--warn); }
+    .mission.bad { border-left-color: var(--expense); }
+
+    .missionTitle {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .missionText {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 860px) {
+      .summary { grid-template-columns: 1fr; }
+      .blocksGrid { grid-template-columns: 1fr; }
+      .tower { min-height: 320px; }
+      .towerStack { min-height: 230px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SimHouse v0.2.2</h1>
+    <div class="subtitle">住まい積み木｜支出の山と収入の山を積み、右端に差額の山を出します。単位は「万円」。</div>
+  </header>
+
+  <main>
+    <section class="summary">
+      <div class="card metric">
+        <div class="label">支出合計</div>
+        <div class="value expenseText" id="expenseTotal">0万円</div>
+        <div class="note">購入・リフォーム・解体など</div>
+      </div>
+      <div class="card metric">
+        <div class="label">収入合計</div>
+        <div class="value incomeText" id="incomeTotal">0万円</div>
+        <div class="note">マンション手残り・売却手残りなど</div>
+      </div>
+      <div class="card metric net" id="netMetric">
+        <div class="label">差額＝20年実質利用料</div>
+        <div class="value" id="netTotal">0万円</div>
+        <div class="note">支出 − 収入</div>
+      </div>
+    </section>
+
+    <section class="card mission" id="missionBox">
+      <div class="missionTitle" id="missionTitle">ミッション判定</div>
+      <div class="missionText" id="missionText">数字を入力してください。</div>
+    </section>
+
+    <section class="card panel">
+      <h2>入力表</h2>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>種別</th>
+              <th>時期</th>
+              <th>金額（万円）</th>
+              <th>回数</th>
+              <th>20年換算</th>
+              <th>ブロック</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="controls">
+        <button id="addRow">行を追加</button>
+        <button id="resetRows" class="dangerBtn">初期値に戻す</button>
+      </div>
+      <div class="small">
+        メモ：毎月5万円なら「金額=5、回数=240」。一括費用なら「回数=1」。売却手残りは収入側に入れます。固定資産税は年額×20年で見ます。保存機能はまだありません。
+      </div>
+    </section>
+
+    <section class="blocksGrid">
+      <div class="card tower">
+        <div class="towerHeader">
+          <div class="towerTitle">支出の山</div>
+          <div class="towerTotal" id="expenseTowerTotal">0万円</div>
+        </div>
+        <div class="towerStack" id="expenseStack"></div>
+      </div>
+      <div class="card tower">
+        <div class="towerHeader">
+          <div class="towerTitle">収入の山</div>
+          <div class="towerTotal" id="incomeTowerTotal">0万円</div>
+        </div>
+        <div class="towerStack" id="incomeStack"></div>
+      </div>
+      <div class="card tower">
+        <div class="towerHeader">
+          <div class="towerTitle">差額の山</div>
+          <div class="towerTotal" id="netTowerTotal">0万円</div>
+        </div>
+        <div class="towerStack" id="netStack"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaultItems = [
+      { name: "購入価格", type: "expense", timing: "初期", amount: 3880, count: 1 },
+      { name: "リフォーム", type: "expense", timing: "初期", amount: 900, count: 1 },
+      { name: "諸費用", type: "expense", timing: "初期", amount: 300, count: 1 },
+      { name: "火災・地震保険", type: "expense", timing: "初期", amount: 50, count: 1 },
+      { name: "里山初期整備", type: "expense", timing: "初期", amount: 200, count: 1 },
+      { name: "固定資産税", type: "expense", timing: "年間", amount: 20, count: 20 },
+      { name: "解体撤去費", type: "expense", timing: "20年後", amount: 1200, count: 1 },
+      { name: "マンション手残り", type: "income", timing: "毎月", amount: 5, count: 240 },
+      { name: "高台の家 売却手残り", type: "income", timing: "20年後", amount: 2500, count: 1 }
+    ];
+
+    let items = structuredClone(defaultItems);
+
+    const typeLabels = {
+      expense: "支出",
+      income: "収入"
+    };
+
+    const typeClass = {
+      expense: "expense",
+      income: "income"
+    };
+
+    const rowsEl = document.getElementById("rows");
+
+    function yenMan(value) {
+      const n = Math.round(Number(value) || 0);
+      const sign = n < 0 ? "▲" : "";
+      return sign + Math.abs(n).toLocaleString("ja-JP") + "万円";
+    }
+
+    function calc20(item) {
+      return (Number(item.amount) || 0) * (Number(item.count) || 0);
+    }
+
+    function renderTable() {
+      rowsEl.innerHTML = "";
+      items.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="nameCell"><input value="${escapeHtml(item.name)}" data-index="${index}" data-field="name"></td>
+          <td class="typeCell">
+            <select data-index="${index}" data-field="type">
+              <option value="expense" ${item.type === "expense" ? "selected" : ""}>支出</option>
+              <option value="income" ${item.type === "income" ? "selected" : ""}>収入</option>
+            </select>
+          </td>
+          <td class="timingCell"><input value="${escapeHtml(item.timing)}" data-index="${index}" data-field="timing"></td>
+          <td class="amountCell"><input type="number" min="0" step="1" value="${item.amount}" data-index="${index}" data-field="amount"></td>
+          <td class="amountCell"><input type="number" min="0" step="1" value="${item.count}" data-index="${index}" data-field="count"></td>
+          <td class="calc">${yenMan(calc20(item))}</td>
+          <td><span class="miniBlock ${typeClass[item.type]}" style="width:${miniWidth(calc20(item))}px">${typeLabels[item.type]}</span></td>
+          <td><button data-delete="${index}" title="削除">削除</button></td>
+        `;
+        rowsEl.appendChild(tr);
+      });
+
+      rowsEl.querySelectorAll("input, select").forEach(el => {
+        el.addEventListener("input", onInput);
+        el.addEventListener("change", onInput);
+      });
+
+      rowsEl.querySelectorAll("button[data-delete]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = Number(btn.dataset.delete);
+          items.splice(index, 1);
+          renderAll();
+        });
+      });
+    }
+
+    function miniWidth(amount) {
+      const max = Math.max(1, ...items.map(calc20));
+      return Math.max(28, Math.round((amount / max) * 130));
+    }
+
+    function onInput(event) {
+      const index = Number(event.target.dataset.index);
+      const field = event.target.dataset.field;
+      let value = event.target.value;
+      if (field === "amount" || field === "count") value = Number(value);
+      items[index][field] = value;
+      renderAll();
+    }
+
+    function getTotals() {
+      return items.reduce((acc, item) => {
+        const value = calc20(item);
+        acc[item.type] += value;
+        return acc;
+      }, { expense: 0, income: 0 });
+    }
+
+    function renderBlocks() {
+      const expenseStack = document.getElementById("expenseStack");
+      const incomeStack = document.getElementById("incomeStack");
+      const netStack = document.getElementById("netStack");
+
+      expenseStack.innerHTML = "";
+      incomeStack.innerHTML = "";
+      netStack.innerHTML = "";
+
+      const totals = getTotals();
+      const net = totals.expense - totals.income;
+      const maxTotal = Math.max(1, totals.expense, totals.income, Math.abs(net));
+      const scalePx = 320 / maxTotal;
+
+      items.forEach(item => {
+        const value = calc20(item);
+        if (value <= 0) return;
+
+        const block = document.createElement("div");
+        block.className = `block ${typeClass[item.type]}`;
+        block.style.height = `${Math.max(30, Math.round(value * scalePx))}px`;
+        block.innerHTML = `
+          <span class="blockName">${escapeHtml(item.name)}</span>
+          <span class="blockAmount">${yenMan(value)}</span>
+        `;
+
+        if (item.type === "expense") expenseStack.appendChild(block);
+        if (item.type === "income") incomeStack.appendChild(block);
+      });
+
+      const absNet = Math.abs(net);
+      if (absNet > 0) {
+        const block = document.createElement("div");
+        const isSurplus = net < 0;
+        block.className = `block ${isSurplus ? "surplus" : "net"}`;
+        block.style.height = `${Math.max(36, Math.round(absNet * scalePx))}px`;
+        block.innerHTML = `
+          <span class="blockName">${isSurplus ? "収入超過" : "20年実質利用料"}</span>
+          <span class="blockAmount">${yenMan(absNet)}</span>
+        `;
+        netStack.appendChild(block);
+      }
+    }
+
+    function renderSummary() {
+      const totals = getTotals();
+      const net = totals.expense - totals.income;
+
+      document.getElementById("expenseTotal").textContent = yenMan(totals.expense);
+      document.getElementById("incomeTotal").textContent = yenMan(totals.income);
+      document.getElementById("netTotal").textContent = yenMan(net);
+
+      document.getElementById("expenseTowerTotal").textContent = yenMan(totals.expense);
+      document.getElementById("incomeTowerTotal").textContent = yenMan(totals.income);
+      document.getElementById("netTowerTotal").textContent = net < 0 ? "収入超過 " + yenMan(Math.abs(net)) : yenMan(net);
+
+      const netMetric = document.getElementById("netMetric");
+      const missionBox = document.getElementById("missionBox");
+      const missionTitle = document.getElementById("missionTitle");
+      const missionText = document.getElementById("missionText");
+
+      netMetric.classList.remove("good", "warn", "bad");
+      missionBox.classList.remove("good", "warn", "bad");
+
+      if (net <= 0) {
+        netMetric.classList.add("good");
+        missionBox.classList.add("good");
+        missionTitle.textContent = "黒字・収入超過";
+        missionText.textContent = "収入と回収が支出を上回っています。数字上は非常に強い案です。入力ミスがないかだけ確認してください。";
+      } else if (net <= 1000) {
+        netMetric.classList.add("good");
+        missionBox.classList.add("good");
+        missionTitle.textContent = "かなり良い";
+        missionText.textContent = "20年実質利用料が1,000万円以内。数字上はかなり強い案です。";
+      } else if (net <= 1500) {
+        netMetric.classList.add("good");
+        missionBox.classList.add("good");
+        missionTitle.textContent = "許容圏";
+        missionText.textContent = "20年実質利用料が1,500万円以内。都市型ダーチャ価値込みなら検討しやすい水準です。";
+      } else if (net <= 2000) {
+        netMetric.classList.add("warn");
+        missionBox.classList.add("warn");
+        missionTitle.textContent = "要覚悟";
+        missionText.textContent = "20年実質利用料が2,000万円以内。好きだけではなく、家族合意と出口確認が必要です。";
+      } else if (net <= 2500) {
+        netMetric.classList.add("bad");
+        missionBox.classList.add("bad");
+        missionTitle.textContent = "危険域";
+        missionText.textContent = "20年実質利用料が2,500万円以内。マンションリノベや別案とかなり厳しく比較したい水準です。";
+      } else {
+        netMetric.classList.add("bad");
+        missionBox.classList.add("bad");
+        missionTitle.textContent = "撤退寄り";
+        missionText.textContent = "20年実質利用料が2,500万円超。偏愛課金がかなり大きく、強いブレーキが必要です。";
+      }
+    }
+
+    function renderAll() {
+      renderTable();
+      renderBlocks();
+      renderSummary();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.getElementById("addRow").addEventListener("click", () => {
+      items.push({ name: "新しい項目", type: "expense", timing: "初期", amount: 100, count: 1 });
+      renderAll();
+    });
+
+    document.getElementById("resetRows").addEventListener("click", () => {
+      items = structuredClone(defaultItems);
+      renderAll();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
