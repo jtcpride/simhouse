@@ -297,6 +297,91 @@
       .tower { min-height: 320px; }
       .towerStack { min-height: 230px; }
     }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 18px 14px 8px;
+      }
+
+      main {
+        padding: 10px 14px 28px;
+      }
+
+      .panel,
+      .tower,
+      .mission,
+      .metric {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .tableWrap {
+        overflow-x: visible;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        display: grid;
+        gap: 10px;
+      }
+
+      tr {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fcfbf8;
+      }
+
+      td {
+        display: grid;
+        gap: 4px;
+        padding: 0;
+        border-bottom: 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .nameCell,
+      .typeCell,
+      .timingCell,
+      .amountCell {
+        min-width: 0;
+      }
+
+      .calc {
+        text-align: left;
+      }
+
+      td:last-child::before {
+        content: none;
+      }
+
+      td:last-child button {
+        width: 100%;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .controls button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -424,18 +509,18 @@
       items.forEach((item, index) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td class="nameCell"><input value="${escapeHtml(item.name)}" data-index="${index}" data-field="name"></td>
-          <td class="typeCell">
+          <td class="nameCell" data-label="項目"><input value="${escapeHtml(item.name)}" data-index="${index}" data-field="name"></td>
+          <td class="typeCell" data-label="種別">
             <select data-index="${index}" data-field="type">
               <option value="expense" ${item.type === "expense" ? "selected" : ""}>支出</option>
               <option value="income" ${item.type === "income" ? "selected" : ""}>収入</option>
             </select>
           </td>
-          <td class="timingCell"><input value="${escapeHtml(item.timing)}" data-index="${index}" data-field="timing"></td>
-          <td class="amountCell"><input type="number" min="0" step="1" value="${item.amount}" data-index="${index}" data-field="amount"></td>
-          <td class="amountCell"><input type="number" min="0" step="1" value="${item.count}" data-index="${index}" data-field="count"></td>
-          <td class="calc">${yenMan(calc20(item))}</td>
-          <td><span class="miniBlock ${typeClass[item.type]}" style="width:${miniWidth(calc20(item))}px">${typeLabels[item.type]}</span></td>
+          <td class="timingCell" data-label="時期"><input value="${escapeHtml(item.timing)}" data-index="${index}" data-field="timing"></td>
+          <td class="amountCell" data-label="金額（万円）"><input type="number" min="0" step="1" value="${item.amount}" data-index="${index}" data-field="amount"></td>
+          <td class="amountCell" data-label="回数"><input type="number" min="0" step="1" value="${item.count}" data-index="${index}" data-field="count"></td>
+          <td class="calc" data-label="20年換算">${yenMan(calc20(item))}</td>
+          <td data-label="ブロック"><span class="miniBlock ${typeClass[item.type]}" style="width:${miniWidth(calc20(item))}px">${typeLabels[item.type]}</span></td>
           <td><button data-delete="${index}" title="削除">削除</button></td>
         `;
         rowsEl.appendChild(tr);
