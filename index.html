@@ -293,7 +293,6 @@
 
     @media (max-width: 860px) {
       .summary { grid-template-columns: 1fr; }
-      .blocksGrid { grid-template-columns: 1fr; }
       .tower { min-height: 320px; }
       .towerStack { min-height: 230px; }
     }
@@ -380,6 +379,21 @@
 
       .controls button {
         width: 100%;
+      }
+
+      .blocksGrid {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+        overflow-x: auto;
+        align-items: start;
+        padding-bottom: 2px;
+      }
+
+      .tower {
+        min-height: 300px;
+      }
+
+      .towerStack {
+        min-height: 210px;
       }
     }
   </style>
